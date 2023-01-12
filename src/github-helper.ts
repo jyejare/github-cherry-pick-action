@@ -31,9 +31,9 @@ export async function createPullRequest(
     core.info(`Using body '${title}'`)
 
     // Get HEAD Pull Request Number
-      const number = github.context.issue.number
-      const repoUrl = `https://github.com/${owner}/${repo}`;
-      const pull_request = `${repoUrl}/pull/${number}`
+    const number = github.context.issue.number
+    const repoUrl = `https://github.com/${owner}/${repo}`
+    const pull_request = `${repoUrl}/pull/${number}`
 
     // Get PR body
     const body =
@@ -41,8 +41,8 @@ export async function createPullRequest(
       github.context.payload.pull_request &&
       github.context.payload.pull_request.body
     core.info(`Using body '${body}'`)
-    const mod_body = 'Cherrypick of PR: ' + pull_request + '\n\n' + body
-    const mod_title = '[' + inputs.branch + '] ' + title
+    const mod_body = `Cherrypick of PR: ${pull_request}\n\n${body}`
+    const mod_title = `[${inputs.branch}] ${title}`
     // Create PR
     const pull = await octokit.pulls.create({
       owner,
@@ -95,11 +95,13 @@ export async function createPullRequest(
           team_reviewers: inputs.teamReviewers
         })
       }
-    } catch (e) {
-      if (e.message && e.message.includes(ERROR_PR_REVIEW_FROM_AUTHOR)) {
-        core.warning(ERROR_PR_REVIEW_FROM_AUTHOR)
-      } else {
-        throw e
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        if (e.message && e.message.includes(ERROR_PR_REVIEW_FROM_AUTHOR)) {
+          core.warning(ERROR_PR_REVIEW_FROM_AUTHOR)
+        } else {
+          throw e
+        }
       }
     }
     return pull
