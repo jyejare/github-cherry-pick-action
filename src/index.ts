@@ -64,7 +64,8 @@ export async function run(): Promise<void> {
       '-x',
       '-m',
       '1',
-      '--strategy=resolve',
+      '--strategy-option=diff-algorithm=histogram',
+      '--strategy-option=find-renames',
       `${githubSha}`
     ])
     if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
