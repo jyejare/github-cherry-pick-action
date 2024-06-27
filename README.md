@@ -98,15 +98,16 @@ Mor informatoin can be found in the [GitHub Blog](https://github.blog/2020-08-03
 
 ### Action inputs
 
-| Name | Description | Default |
-| --- | --- | --- |
-| `token` | `GITHUB_TOKEN` or a `repo` scoped [Personal Access Token (PAT)](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). | `GITHUB_TOKEN` |
-| `committer` | The committer name and email address in the format `Display Name <email@address.com>`. Defaults to the GitHub Actions bot user. | `GitHub <noreply@github.com>` |
-| `author` | The author name and email address in the format `Display Name <email@address.com>`. Defaults to the user who triggered the workflow run. | `${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>` |
-| `branch` | Name of the branch to merge the cherry pick. | `create-pull-request/patch` |
-| `labels` | A comma or newline-separated list of labels. | |
-| `assignees` | A comma or newline-separated list of assignees (GitHub usernames). | |
-| `reviewers` | A comma or newline-separated list of reviewers (GitHub usernames) to request a review from. | |
+| Name             | Description | Default |
+|------------------| --- | --- |
+| `token`          | `GITHUB_TOKEN` or a `repo` scoped [Personal Access Token (PAT)](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). | `GITHUB_TOKEN` |
+| `pull_number`    | The master PRs number to cherrypick into given branch |  |
+| `committer`      | The committer name and email address in the format `Display Name <email@address.com>`. Defaults to the GitHub Actions bot user. | `GitHub <noreply@github.com>` |
+| `author`         | The author name and email address in the format `Display Name <email@address.com>`. Defaults to the user who triggered the workflow run. | `${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>` |
+| `branch`         | Name of the branch to merge the cherry pick. | `create-pull-request/patch` |
+| `labels`         | A comma or newline-separated list of labels. | |
+| `assignees`      | A comma or newline-separated list of assignees (GitHub usernames). | |
+| `reviewers`      | A comma or newline-separated list of reviewers (GitHub usernames) to request a review from. | |
 | `team-reviewers` | A comma or newline-separated list of GitHub teams to request a review from. Note that a `repo` scoped [PAT](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) may be required. | |
 
 ### Action outputs
