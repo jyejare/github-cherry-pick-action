@@ -11173,7 +11173,7 @@ function run() {
             let githubSha;
             if (inputs.pull_number) {
                 const pull = yield (0, github_helper_1.getPullRequest)(inputs);
-                githubSha = pull.data.merge_commit_sha;
+                githubSha = pull.data.head.sha;
             }
             else {
                 githubSha = github.context.payload.pull_request
