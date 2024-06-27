@@ -3,7 +3,7 @@ import * as io from '@actions/io'
 import * as exec from '@actions/exec'
 import * as utils from './utils'
 import * as github from '@actions/github'
-import {Inputs, createPullRequest} from './github-helper'
+import {Inputs, createPullRequest, getPullRequest} from './github-helper'
 import {PullRequest} from '@octokit/webhooks-definitions/schema'
 
 const CHERRYPICK_EMPTY =
@@ -14,6 +14,7 @@ export async function run(): Promise<void> {
     const inputs: Inputs = {
       token: core.getInput('token'),
       committer: core.getInput('committer'),
+      pull_number: core.getInput('pull_number'),
       author: core.getInput('author'),
       branch: core.getInput('branch'),
       labels: utils.getInputAsArray('labels'),
@@ -26,8 +27,14 @@ export async function run(): Promise<void> {
 
     // the value of merge_commit_sha changes depending on the status of the pull request
     // see https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
-    const githubSha = (github.context.payload.pull_request as PullRequest)
-      .merge_commit_sha
+    let githubSha
+    if (inputs.pull_number) {
+      const pull = await getPullRequest(inputs)
+      githubSha = pull.data.merge_commit_sha
+    } else {
+      githubSha = (github.context.payload.pull_request as PullRequest)
+        .merge_commit_sha
+    }
     const prBranch = `cherry-pick-${inputs.branch}-${githubSha}`
 
     // Configure the committer and author

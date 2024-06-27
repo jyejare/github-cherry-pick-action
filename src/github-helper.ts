@@ -7,12 +7,20 @@ const ERROR_PR_REVIEW_FROM_AUTHOR =
 export interface Inputs {
   token: string
   committer: string
+  pull_number: string
   author: string
   branch: string
   labels: string[]
   assignees: string[]
   reviewers: string[]
   teamReviewers: string[]
+}
+
+export interface PullRequest {
+  data: {
+    title: string
+    body: string
+  }
 }
 
 export async function createPullRequest(
@@ -22,25 +30,40 @@ export async function createPullRequest(
   const octokit = github.getOctokit(inputs.token)
   if (process.env.GITHUB_REPOSITORY !== undefined) {
     const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
+    let givenPull: PullRequest | undefined
+    let pull_number
+    let title
+    let body
+    if (inputs.pull_number) {
+      givenPull = await getPullRequest(inputs)
+    }
 
-    // Get PR title
-    const title =
-      github.context.payload &&
-      github.context.payload.pull_request &&
-      github.context.payload.pull_request.title
-    core.info(`Using body '${title}'`)
+    if (givenPull) {
+      title = givenPull.data.title
+      core.info(`Using Title '${title}'`)
+
+      pull_number = inputs.pull_number
+
+      body = givenPull.data.body
+      core.info(`Using body '${body}'`)
+    } else {
+      title =
+        github.context.payload &&
+        github.context.payload.pull_request &&
+        github.context.payload.pull_request.title
+      core.info(`Using body '${title}'`)
+      pull_number = github.context.issue.number
+      body =
+        github.context.payload &&
+        github.context.payload.pull_request &&
+        github.context.payload.pull_request.body
+      core.info(`Using body '${body}'`)
+    }
 
     // Get HEAD Pull Request Number
-    const number = github.context.issue.number
     const repoUrl = `https://github.com/${owner}/${repo}`
-    const pull_request = `${repoUrl}/pull/${number}`
+    const pull_request = `${repoUrl}/pull/${pull_number}`
 
-    // Get PR body
-    const body =
-      github.context.payload &&
-      github.context.payload.pull_request &&
-      github.context.payload.pull_request.body
-    core.info(`Using body '${body}'`)
     const mod_body = `Cherrypick of PR: ${pull_request}\n\n${body}`
     const mod_title = `[${inputs.branch}] ${title}`
     // Create PR
@@ -104,6 +127,19 @@ export async function createPullRequest(
         }
       }
     }
+    return pull
+  }
+}
+
+export async function getPullRequest(inputs: Inputs): Promise<any> {
+  const octokit = github.getOctokit(inputs.token)
+  if (process.env.GITHUB_REPOSITORY !== undefined) {
+    const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
+    const pull = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: Number(inputs.pull_number)
+    })
     return pull
   }
 }

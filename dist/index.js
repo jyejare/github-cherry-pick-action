@@ -10982,7 +10982,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createPullRequest = void 0;
+exports.getPullRequest = exports.createPullRequest = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const ERROR_PR_REVIEW_FROM_AUTHOR = 'Review cannot be requested from pull request author';
@@ -10991,20 +10991,36 @@ function createPullRequest(inputs, prBranch) {
         const octokit = github.getOctokit(inputs.token);
         if (process.env.GITHUB_REPOSITORY !== undefined) {
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-            // Get PR title
-            const title = github.context.payload &&
-                github.context.payload.pull_request &&
-                github.context.payload.pull_request.title;
-            core.info(`Using body '${title}'`);
+            let givenPull;
+            let pull_number;
+            let title;
+            let body;
+            if (inputs.pull_number) {
+                givenPull = yield getPullRequest(inputs);
+            }
+            if (givenPull) {
+                title = givenPull.data.title;
+                core.info(`Using Title '${title}'`);
+                pull_number = inputs.pull_number;
+                body = givenPull.data.body;
+                core.info(`Using body '${body}'`);
+            }
+            else {
+                title =
+                    github.context.payload &&
+                        github.context.payload.pull_request &&
+                        github.context.payload.pull_request.title;
+                core.info(`Using body '${title}'`);
+                pull_number = github.context.issue.number;
+                body =
+                    github.context.payload &&
+                        github.context.payload.pull_request &&
+                        github.context.payload.pull_request.body;
+                core.info(`Using body '${body}'`);
+            }
             // Get HEAD Pull Request Number
-            const number = github.context.issue.number;
             const repoUrl = `https://github.com/${owner}/${repo}`;
-            const pull_request = `${repoUrl}/pull/${number}`;
-            // Get PR body
-            const body = github.context.payload &&
-                github.context.payload.pull_request &&
-                github.context.payload.pull_request.body;
-            core.info(`Using body '${body}'`);
+            const pull_request = `${repoUrl}/pull/${pull_number}`;
             const mod_body = `Cherrypick of PR: ${pull_request}\n\n${body}`;
             const mod_title = `[${inputs.branch}] ${title}`;
             // Create PR
@@ -11072,6 +11088,21 @@ function createPullRequest(inputs, prBranch) {
     });
 }
 exports.createPullRequest = createPullRequest;
+function getPullRequest(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = github.getOctokit(inputs.token);
+        if (process.env.GITHUB_REPOSITORY !== undefined) {
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const pull = yield octokit.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: Number(inputs.pull_number)
+            });
+            return pull;
+        }
+    });
+}
+exports.getPullRequest = getPullRequest;
 
 
 /***/ }),
@@ -11128,6 +11159,7 @@ function run() {
             const inputs = {
                 token: core.getInput('token'),
                 committer: core.getInput('committer'),
+                pull_number: core.getInput('pull_number'),
                 author: core.getInput('author'),
                 branch: core.getInput('branch'),
                 labels: utils.getInputAsArray('labels'),
@@ -11138,8 +11170,15 @@ function run() {
             core.info(`Cherry pick into branch ${inputs.branch}!`);
             // the value of merge_commit_sha changes depending on the status of the pull request
             // see https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
-            const githubSha = github.context.payload.pull_request
-                .merge_commit_sha;
+            let githubSha;
+            if (inputs.pull_number) {
+                const pull = yield (0, github_helper_1.getPullRequest)(inputs);
+                githubSha = pull.data.merge_commit_sha;
+            }
+            else {
+                githubSha = github.context.payload.pull_request
+                    .merge_commit_sha;
+            }
             const prBranch = `cherry-pick-${inputs.branch}-${githubSha}`;
             // Configure the committer and author
             core.startGroup('Configuring the committer and author');
