@@ -4,7 +4,7 @@ import * as exec from '@actions/exec'
 import * as utils from './utils'
 import * as github from '@actions/github'
 import {Inputs, createPullRequest, getPullRequest} from './github-helper'
-import {PullRequest} from '@octokit/webhooks-definitions/schema'
+import {PullRequest} from '@octokit/webhooks-types'
 
 const CHERRYPICK_EMPTY =
   'The previous cherry-pick is now empty, possibly due to conflict resolution.'
