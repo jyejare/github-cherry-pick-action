@@ -5,6 +5,9 @@ inputs:
     description: "GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)"
     default: ${{ github.token }}
     required: false
+  pull_number:
+    description: "The master PRs number to cherrypick into given branch"
+    required: false
   committer:
     description: >
       The committer name and email address in the format `Display Name <email@address.com>`.
@@ -35,7 +38,7 @@ inputs:
       Note that a `repo` scoped Personal Access Token (PAT) may be required.
     required: false
 runs:
-  using: node12
+  using: node20
   main: dist/index.js
 branding:
   icon: 'git-pull-request'
