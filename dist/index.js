@@ -30647,7 +30647,7 @@ function run() {
             let githubSha;
             if (inputs.pull_number) {
                 const pull = yield (0, github_helper_1.getPullRequest)(inputs);
-                githubSha = pull.data.head.merge_commit_sha;
+                githubSha = pull.data.merge_commit_sha;
             }
             else {
                 githubSha = github.context.payload.pull_request
